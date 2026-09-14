@@ -1,2 +1,91 @@
-def is_valid_item_csv(c):
-    c["csv_text"][""]
+import csv
+
+def add_error_details(errors: list, row: int, message: str):
+    for err in errors:
+        if err["row"] == row:
+            err["message"] += "; " + message
+            return 0
+    errors.append({"row": row, "message": message})
+    
+
+def process_csv_text(csv_text):
+    splitted_lines = csv_text.csv_text.split(";")
+    csv_reader = list(csv.reader(splitted_lines))
+
+    errors = []
+
+    csv_headers = csv_reader[0]
+    total = len(csv_reader)
+    valid = 0
+    invalid = 0
+    status_code = None
+
+    if not ("item_code" in csv_headers 
+            and "quantity" in csv_headers
+            and "location" in csv_headers):
+        errors.append({"row":1, "message": "invalid header"})
+        invalid += 1
+    else: valid += 1
+    existing_item_codes = []
+
+    i = 1
+    while (i < total):
+        row = i + 1
+
+        #item_code processing
+        item_code = csv_reader[i][0].strip()
+
+        if item_code == "":
+            add_error_details(errors, row, "item_code_is_empty")
+        elif not 97 > ord(item_code[0]) >= 65:
+            add_error_details(errors, row, "item_code_invalid_character")
+        elif item_code[0].upper() != item_code[0]:
+            add_error_details(errors, row, "item_code_lowercase_character")
+        try:
+            int(item_code[1:])
+            if len(item_code[1:]) > 2:
+                add_error_details(errors, row, "item_code_invalid_number")
+        except:
+            add_error_details(errors, row, "item_code_invalid_type")
+        if item_code in existing_item_codes:
+            add_error_details(errors, row, "item_code_duplicate")
+        existing_item_codes.append(item_code)
+
+        #quantity processing
+        try:
+            quantity = int(csv_reader[i][1])
+            if not (20 > quantity >= 1):
+                add_error_details(errors, row, "quantity_invalid_number")
+        except:
+            add_error_details(errors, row, "quantity_invalid_type")
+
+        #location processing
+        location = csv_reader[i][2].strip()
+        if location == "":
+            add_error_details(errors,row, "location_is_empty")
+        elif location[0].upper() != "R":
+            add_error_details(errors, row, "location_invalid_character")
+        elif location[0].upper() != location[0]:
+            add_error_details(errors, row, "location_lowercase_character")
+        try:
+            if not (9 >= int(location[1:]) >= 1):
+                add_error_details(errors, row, "location_invalid_number")
+        except:
+            add_error_details(errors, row, "location_invalid_type")
+
+        if len(errors) != 0 and errors[-1]["row"] == row:
+            invalid += 1
+        else:
+            valid += 1
+        i += 1
+
+    if total > 50 or invalid > 0:
+        status_code = 400
+    else:
+        status_code = 200
+
+    return {"total":total, 
+            "valid": valid, 
+            "invalid": invalid, 
+            "errors": errors, 
+            "status_code": status_code}
