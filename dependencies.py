@@ -6,11 +6,13 @@ def add_error_details(errors: list, row: int, message: str):
             err["message"] += "; " + message
             return 0
     errors.append({"row": row, "message": message})
-    
+
+def convert_csv_text_to_lines(csv_text):
+    splitted_lines = csv_text.split(";")
+    return list(csv.reader(splitted_lines))
 
 def process_csv_text(csv_text):
-    splitted_lines = csv_text.csv_text.split(";")
-    csv_reader = list(csv.reader(splitted_lines))
+    csv_reader = convert_csv_text_to_lines(csv_text.csv_text)
 
     errors = []
 
@@ -31,6 +33,11 @@ def process_csv_text(csv_text):
     i = 1
     while (i < total):
         row = i + 1
+        if len(csv_reader[i]) != 3:
+            add_error_details(errors,row, "invalid_amount_of_data")
+            i += 1
+            invalid += 1
+            continue            
 
         #item_code processing
         item_code = csv_reader[i][0].strip()
@@ -43,7 +50,7 @@ def process_csv_text(csv_text):
             add_error_details(errors, row, "item_code_lowercase_character")
         try:
             int(item_code[1:])
-            if len(item_code[1:]) > 2:
+            if len(item_code[1:]) != 2:
                 add_error_details(errors, row, "item_code_invalid_number")
         except:
             add_error_details(errors, row, "item_code_invalid_type")
