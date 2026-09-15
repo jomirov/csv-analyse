@@ -8,7 +8,7 @@ router = APIRouter()
 
 @router.post('/preview')
 def analyse_csv(csv_text: csv_text):
-    if len(csv_text.csv_text) > 100000:
+    if len(csv_text.csv_text) >= 100000:
         raise HTTPException(status_code=413)
     
     res = process_csv_text(csv_text)

@@ -104,4 +104,5 @@ def process_csv_text(csv_text):
             "valid": valid, 
             "invalid": invalid, 
             "errors": errors, 
-            "status_code": status_code}
+            "status_code": status_code,
+            "details": "OK" if len(exception_details) == 0 else "; ".join(exception_details)}
