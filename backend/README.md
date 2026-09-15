@@ -35,7 +35,14 @@ curl http://localhost:8000/preview `
 ```
 Ожидаемый ответ:
 ```json
-
+{
+    "total": 3,
+    "valid": 3,
+    "invalid": 0,
+    "errors": [],
+    "status_code": 200,
+    "details": "OK"
+}
 ```
 Запрос с ошибкой строки (quantity):
 ```powershell
@@ -44,6 +51,17 @@ curl http://localhost:8000/preview `
 -Headers @{"Content-Type"="application/json"} `
 -Body '{"csv_text": "item_code,quantity,location;A01,0,R1;B02,5,R2"}'
 ```
+Ожидаемый ответ:
+```json
+{
+    "total": 3,
+    "valid": 2,
+    "invalid": 1,
+    "errors": [{"row": 2, "message": "quantity_invalid_number"}],
+    "status_code": 200,
+    "details": "OK"
+}
+```
 Запрос с дубликатом кода (item_code):
 ```powershell
 curl http://localhost:8000/preview `
@@ -51,12 +69,34 @@ curl http://localhost:8000/preview `
 -Headers @{"Content-Type"="application/json"} `
 -Body '{"csv_text": "item_code,quantity,location;A01,1,R1;A01,5,R2"}'
 ```
+Ожидаемый ответ:
+```json
+{
+    "total": 3,
+    "valid": 2,
+    "invalid": 1,
+    "errors": [{"row": 3, "message": "item_code_duplicate"}],
+    "status_code": 200,
+    "details": "OK"
+}
+```
 Запрос с неправильным заголовком:
 ```powershell
 curl http://localhost:8000/preview `
 -Method POST `
 -Headers @{"Content-Type"="application/json"} `
 -Body '{"csv_text": "item_odec,quantity,location;A01,1,R1;A01,5,R2"}'
+```
+Ожидаемый ответ:
+```json
+{
+    "total": 3,
+    "valid": 2,
+    "invalid": 1,
+    "errors": [],
+    "status_code": 400,
+    "details": "invalid_header"
+}
 ```
 ### Запуск тестов
 ```powershell
