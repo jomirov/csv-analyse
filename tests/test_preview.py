@@ -1,5 +1,4 @@
 from fastapi.testclient import TestClient
-from fastapi.responses import JSONResponse
 from ..app import app
 
 client = TestClient(app)
