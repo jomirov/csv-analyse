@@ -99,6 +99,7 @@ def process_csv_text(csv_text):
 
     if total > 50:
         status_code = 400
+        exception_details.append("line_amount_is_more_than_fifty")
 
     return {"total":total, 
             "valid": valid, 
