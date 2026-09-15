@@ -15,18 +15,20 @@ def process_csv_text(csv_text):
     csv_reader = convert_csv_text_to_lines(csv_text.csv_text)
 
     errors = []
+    exception_details = []
 
     csv_headers = csv_reader[0]
     total = len(csv_reader)
     valid = 0
     invalid = 0
-    status_code = None
+    status_code = 200
 
     if not ("item_code" in csv_headers 
             and "quantity" in csv_headers
             and "location" in csv_headers):
-        errors.append({"row":1, "message": "invalid header"})
+        exception_details.append("invalid_header")
         invalid += 1
+        status_code = 400
     else: valid += 1
     existing_item_codes = []
 
@@ -34,16 +36,19 @@ def process_csv_text(csv_text):
     while (i < total):
         row = i + 1
         if len(csv_reader[i]) != 3:
-            add_error_details(errors,row, "invalid_amount_of_data")
             i += 1
             invalid += 1
+            status_code = 400
+            exception_details.append("invalid_amount_of_data")
             continue            
 
         #item_code processing
         item_code = csv_reader[i][0].strip()
 
         if item_code == "":
-            add_error_details(errors, row, "item_code_is_empty")
+            status_code = 400
+            exception_details.append("item_code_data_is_empty")
+            add_error_details(errors, row, "item_code_data_is_empty")
         elif not 97 > ord(item_code[0]) >= 65:
             add_error_details(errors, row, "item_code_invalid_character")
         elif item_code[0].upper() != item_code[0]:
@@ -59,8 +64,12 @@ def process_csv_text(csv_text):
         existing_item_codes.append(item_code)
 
         #quantity processing
+        quantity = csv_reader[i][1]
         try:
-            quantity = int(csv_reader[i][1])
+            if quantity == "":
+                exception_details.append("quantity_data_is_empty")
+                status_code = 400
+            quantity = int(quantity)
             if not (20 > quantity >= 1):
                 add_error_details(errors, row, "quantity_invalid_number")
         except:
@@ -69,7 +78,9 @@ def process_csv_text(csv_text):
         #location processing
         location = csv_reader[i][2].strip()
         if location == "":
-            add_error_details(errors,row, "location_is_empty")
+            status_code = 400
+            exception_details.append("location_data_is_empty")
+            add_error_details(errors, row, "location_data_is_empty")
         elif location[0].upper() != "R":
             add_error_details(errors, row, "location_invalid_character")
         elif location[0].upper() != location[0]:
@@ -86,10 +97,8 @@ def process_csv_text(csv_text):
             valid += 1
         i += 1
 
-    if total > 50 or invalid > 0:
+    if total > 50:
         status_code = 400
-    else:
-        status_code = 200
 
     return {"total":total, 
             "valid": valid, 
